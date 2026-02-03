@@ -1,6 +1,10 @@
 # peersignal-server
 
-Simple WebRTC signaling server with code-based P2P pairing.
+[![npm version](https://img.shields.io/npm/v/peersignal-server.svg)](https://www.npmjs.com/package/peersignal-server)
+[![CI](https://github.com/monteslu/peersignal-server/actions/workflows/ci.yml/badge.svg)](https://github.com/monteslu/peersignal-server/actions/workflows/ci.yml)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
+
+Simple WebRTC signaling server with code-based P2P pairing. Works with the [peersignal](https://github.com/monteslu/peersignal) client.
 
 ## Install
 
@@ -29,18 +33,29 @@ httpServer.listen(3000);
 
 ## How It Works
 
-1. **Host** creates room → gets code like `k7m-p2x-9nf`
-2. **Host** shares code out-of-band (text, DM, etc.)
-3. **Peer** joins with code + name
-4. **Host** approves/denies peer
-5. **WebRTC** P2P connection established
+1. **Peer A** creates room → gets code like `k7m-p2x-9nf`
+2. **Peer A** shares code out-of-band (text, DM, etc.)
+3. **Peer B** joins with code
+4. **WebRTC** P2P connection established (auto-approved by default)
 
 ```
-┌─────────┐                     ┌─────────┐
-│  Host   │◄── P2P DataChannel ─►│  Peer   │
-└────┬────┘                     └────┬────┘
-     │                               │
-     └───── Signaling via Server ────┘
+┌──────────┐                      ┌──────────┐
+│  Peer A  │◄── P2P DataChannel ──►│  Peer B  │
+└────┬─────┘                      └────┬─────┘
+     │                                  │
+     └───── Signaling via Server ───────┘
+```
+
+The server only helps establish the connection - all data flows directly between peers.
+
+## CORS
+
+CORS is enabled by default (`origin: '*'`). Override via options:
+
+```js
+createPeerSignalServer(httpServer, {
+  cors: { origin: 'https://yourdomain.com' }
+});
 ```
 
 ## Code Format
@@ -110,9 +125,17 @@ Navigate to `/admin` and authenticate with:
 
 ## Client
 
-The server serves the client library at `/peersignal.js`.
+Use the [peersignal](https://github.com/monteslu/peersignal) client:
 
-Or install separately: [peersignal](https://github.com/monteslu/peersignal)
+```bash
+npm install peersignal
+```
+
+Or via CDN:
+
+```html
+<script src="https://unpkg.com/peersignal"></script>
+```
 
 ## License
 
