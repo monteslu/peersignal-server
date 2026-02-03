@@ -1,6 +1,6 @@
 {
   "name": "peersignal-server",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "description": "Simple WebRTC signaling server with code-based pairing",
   "main": "server/index.js",
   "type": "module",
