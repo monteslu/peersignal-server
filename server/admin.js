@@ -1,6 +1,8 @@
 // Admin dashboard for peersignal-server
 // Protected by ADMIN_PASSWORD env var
 
+import { Buffer } from 'node:buffer';
+import { URL } from 'node:url';
 import * as rooms from './rooms.js';
 
 const ADMIN_PASSWORD = process.env.ADMIN_PASSWORD;
