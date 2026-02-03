@@ -216,9 +216,9 @@ function createPeerSignalServer(httpServer, options = {}) {
 }
 
 // HTTP server with static file serving
-const httpServer = createServer((req, res) => {
+const httpServer = createServer(async (req, res) => {
   // Handle admin routes first
-  if (handleAdminRequest(req, res)) {
+  if (await handleAdminRequest(req, res)) {
     return;
   }
 
