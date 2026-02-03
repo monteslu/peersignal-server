@@ -14,6 +14,7 @@ import {
   joinLimiter, 
   signalLimiter 
 } from './rate-limit.js';
+import { handleAdminRequest, isAdminEnabled, logActivity, incrementStat } from './admin.js';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const PORT = process.env.PORT || 3000;
@@ -63,6 +64,8 @@ function createPeerSignalServer(httpServer, options = {}) {
   io.on('connection', (socket) => {
     const ip = socket.clientIp;
     console.log(`[connect] ${socket.id} from ${ip}`);
+    incrementStat('totalConnections');
+    logActivity('connect', `Socket ${socket.id.slice(0, 8)}... from ${ip}`);
 
     // Idle timeout
     let idleTimer = setTimeout(() => {
@@ -102,6 +105,8 @@ function createPeerSignalServer(httpServer, options = {}) {
 
         const result = rooms.createRoom(socket);
         roomsPerIp.set(ip, ipRoomCount + 1);
+        incrementStat('totalRoomsCreated');
+        logActivity('room:create', `Room ${result.code} created by ${ip}`);
         
         return { ...result, iceServers: ICE_SERVERS };
       },
@@ -128,6 +133,8 @@ function createPeerSignalServer(httpServer, options = {}) {
 
         const result = rooms.joinRoom(socket, normalized, name || 'Anonymous');
         if (result.success) {
+          incrementStat('totalJoinRequests');
+          logActivity('room:join', `${name || 'Anonymous'} joining ${normalized}`);
           return { ...result, iceServers: ICE_SERVERS };
         }
         return result;
@@ -143,7 +150,11 @@ function createPeerSignalServer(httpServer, options = {}) {
       // Host approves/denies a peer
       approvePeer: ({ peerId, approved }) => {
         resetIdleTimer();
-        return rooms.approvePeer(socket, peerId, approved !== false);
+        const result = rooms.approvePeer(socket, peerId, approved !== false);
+        if (result.success) {
+          logActivity('peer:approve', `Peer ${peerId.slice(0, 8)}... ${approved !== false ? 'approved' : 'denied'}`);
+        }
+        return result;
       },
 
       // Send WebRTC signaling data
@@ -184,6 +195,7 @@ function createPeerSignalServer(httpServer, options = {}) {
     socket.on('disconnect', () => {
       console.log(`[disconnect] ${socket.id}`);
       clearTimeout(idleTimer);
+      logActivity('disconnect', `Socket ${socket.id.slice(0, 8)}...`);
       
       // Update room count for IP
       const roomInfo = rooms.getRoomBySocket(socket);
@@ -205,6 +217,11 @@ function createPeerSignalServer(httpServer, options = {}) {
 
 // HTTP server with static file serving
 const httpServer = createServer((req, res) => {
+  // Handle admin routes first
+  if (handleAdminRequest(req, res)) {
+    return;
+  }
+
   if (req.url === '/peersignal.js' || req.url === '/peersignal-client.js') {
     const clientPath = join(__dirname, '..', 'dist', 'peersignal-client.js');
     if (existsSync(clientPath)) {
@@ -224,6 +241,7 @@ const httpServer = createServer((req, res) => {
           <h1>🔗 PeerSignal Server</h1>
           <p>WebRTC signaling server running.</p>
           <p>Client library: <a href="/peersignal.js">/peersignal.js</a></p>
+          ${isAdminEnabled() ? '<p>Admin dashboard: <a href="/admin">/admin</a></p>' : ''}
         </body>
       </html>
     `);
@@ -240,6 +258,9 @@ httpServer.listen(PORT, () => {
   console.log(`   Max pending per room: ${CONFIG.maxPendingPerRoom}`);
   console.log(`   Max rooms per IP: ${CONFIG.maxRoomsPerIp}`);
   console.log(`   Idle timeout: ${CONFIG.idleTimeoutMs / 1000}s`);
+  if (isAdminEnabled()) {
+    console.log(`   Admin dashboard: http://localhost:${PORT}/admin`);
+  }
 });
 
 export { createPeerSignalServer };

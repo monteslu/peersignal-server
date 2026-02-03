@@ -187,3 +187,8 @@ export function getRoomBySocket(socket) {
   const info = socketToRoom.get(socket.id);
   return info ? { room: rooms.get(info.code), ...info } : null;
 }
+
+// Get all rooms (for admin dashboard)
+export function getAllRooms() {
+  return rooms;
+}
