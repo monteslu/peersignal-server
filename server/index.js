@@ -1,8 +1,5 @@
 import { createServer } from 'http';
 import { Server } from 'socket.io';
-import { fileURLToPath } from 'url';
-import { dirname, join } from 'path';
-import { readFileSync, existsSync } from 'fs';
 import rawr from 'rawr';
 import { EventEmitter } from 'events';
 
@@ -16,7 +13,6 @@ import {
 } from './rate-limit.js';
 import { handleAdminRequest, isAdminEnabled, logActivity, incrementStat } from './admin.js';
 
-const __dirname = dirname(fileURLToPath(import.meta.url));
 const PORT = process.env.PORT || 3000;
 
 // Configuration
@@ -215,23 +211,14 @@ function createPeerSignalServer(httpServer, options = {}) {
   return io;
 }
 
-// HTTP server with static file serving
+// HTTP server
 const httpServer = createServer((req, res) => {
   // Handle admin routes first
   if (handleAdminRequest(req, res)) {
     return;
   }
 
-  if (req.url === '/peersignal.js' || req.url === '/peersignal-client.js') {
-    const clientPath = join(__dirname, '..', 'dist', 'peersignal-client.js');
-    if (existsSync(clientPath)) {
-      res.writeHead(200, { 'Content-Type': 'application/javascript' });
-      res.end(readFileSync(clientPath));
-    } else {
-      res.writeHead(404);
-      res.end('Client not built. Run: npm run build:client');
-    }
-  } else if (req.url === '/') {
+  if (req.url === '/') {
     res.writeHead(200, { 'Content-Type': 'text/html' });
     res.end(`
       <!DOCTYPE html>
@@ -240,7 +227,7 @@ const httpServer = createServer((req, res) => {
         <body>
           <h1>🔗 PeerSignal Server</h1>
           <p>WebRTC signaling server running.</p>
-          <p>Client library: <a href="/peersignal.js">/peersignal.js</a></p>
+          <p>Client library: <code>npm install peersignal</code></p>
           ${isAdminEnabled() ? '<p>Admin dashboard: <a href="/admin">/admin</a></p>' : ''}
         </body>
       </html>
