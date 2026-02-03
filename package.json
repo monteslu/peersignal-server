@@ -8,7 +8,11 @@
     "peersignal-server": "./server/index.js"
   },
   "scripts": {
-    "start": "node server/index.js"
+    "start": "node server/index.js",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "lint": "eslint .",
+    "lint:fix": "eslint . --fix"
   },
   "keywords": ["webrtc", "signaling", "p2p", "peer", "pairing", "server"],
   "author": "Luis Montes",
@@ -16,5 +20,10 @@
   "dependencies": {
     "rawr": "^3.0.0",
     "socket.io": "^4.7.0"
+  },
+  "devDependencies": {
+    "@eslint/js": "^9.0.0",
+    "eslint": "^9.0.0",
+    "vitest": "^2.0.0"
   }
 }
