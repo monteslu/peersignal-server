@@ -4,21 +4,13 @@
   "description": "Simple WebRTC signaling server with code-based pairing",
   "main": "server/index.js",
   "type": "module",
-  "bin": {
-    "peersignal-server": "./server/index.js"
-  },
   "scripts": {
     "start": "node server/index.js",
     "test": "vitest run",
-    "test:watch": "vitest",
-    "lint": "eslint .",
-    "lint:fix": "eslint . --fix"
+    "lint": "eslint ."
   },
-  "keywords": ["webrtc", "signaling", "p2p", "peer", "pairing", "server"],
-  "author": "Luis Montes",
-  "license": "MIT",
   "dependencies": {
-    "rawr": "^3.0.0",
+    "rawr": "^1.0.0",
     "socket.io": "^4.7.0"
   },
   "devDependencies": {

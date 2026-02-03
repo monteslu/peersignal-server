@@ -164,7 +164,7 @@ export function rejoinRoom(socket, code, isHost, name) {
     socket.join(code);
     
     // Notify peers host is back
-    for (const [peerId, peer] of room.approvedPeers) {
+    for (const [_peerId, peer] of room.approvedPeers) {
       peer.socket.emit('host:reconnected', { hostId: socket.id });
     }
     
