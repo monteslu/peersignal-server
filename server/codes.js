@@ -10,13 +10,13 @@ export function generateCode() {
 }
 
 export function normalizeCode(code) {
-  // Lowercase and handle common substitutions
+  // Trim first, then lowercase and handle substitutions
   return code
+    .trim()
     .toLowerCase()
     .replace(/[0o]/g, 'o')  // 0 -> o (but o is excluded, so this catches typos)
     .replace(/[1il]/g, 'l') // 1, i, l -> l (but l is excluded)
-    .replace(/\s+/g, '-')   // spaces to dashes
-    .trim();
+    .replace(/\s+/g, '-');  // spaces to dashes
 }
 
 export function validateCode(code) {
