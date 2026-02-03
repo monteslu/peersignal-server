@@ -1,9 +1,32 @@
 {
   "name": "peersignal-server",
-  "version": "0.1.1",
+  "version": "0.1.2",
   "description": "Simple WebRTC signaling server with code-based pairing",
   "main": "server/index.js",
   "type": "module",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/monteslu/peersignal-server.git"
+  },
+  "keywords": [
+    "webrtc",
+    "signaling",
+    "server",
+    "peer",
+    "p2p"
+  ],
+  "author": "Luis Montes",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/monteslu/peersignal-server/issues"
+  },
+  "homepage": "https://github.com/monteslu/peersignal-server#readme",
+  "engines": {
+    "node": ">=18"
+  },
+  "files": [
+    "server/"
+  ],
   "scripts": {
     "start": "node server/index.js",
     "test": "vitest run",
