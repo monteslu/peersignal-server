@@ -1,0 +1,118 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>PeerSignal - Host</title>
+  <style>
+    body { font-family: sans-serif; max-width: 600px; margin: 2rem auto; padding: 1rem; }
+    .code { font-size: 2rem; font-family: monospace; background: #f0f0f0; padding: 1rem; text-align: center; }
+    .peer { background: #e8f5e9; padding: 0.5rem; margin: 0.5rem 0; display: flex; justify-content: space-between; }
+    .pending { background: #fff3e0; }
+    button { padding: 0.5rem 1rem; margin: 0.25rem; cursor: pointer; }
+    #messages { background: #f5f5f5; padding: 1rem; height: 200px; overflow-y: auto; }
+    .msg { margin: 0.25rem 0; }
+  </style>
+</head>
+<body>
+  <h1>🔗 PeerSignal Host</h1>
+  
+  <div id="setup">
+    <button onclick="createRoom()">Create Room</button>
+  </div>
+  
+  <div id="room" style="display:none">
+    <p>Share this code with peers:</p>
+    <div class="code" id="code"></div>
+    
+    <h3>Pending Requests</h3>
+    <div id="pending"></div>
+    
+    <h3>Connected Peers</h3>
+    <div id="peers"></div>
+    
+    <h3>Messages</h3>
+    <div id="messages"></div>
+    <input type="text" id="msgInput" placeholder="Type a message...">
+    <button onclick="broadcast()">Broadcast</button>
+  </div>
+
+  <script src="https://cdn.socket.io/4.7.4/socket.io.min.js"></script>
+  <script src="/peersignal-client.js"></script>
+  <script>
+    let client;
+    
+    async function createRoom() {
+      client = PeerSignal.createClient(window.location.origin);
+      await client.connect();
+      
+      const result = await client.createRoom();
+      document.getElementById('code').textContent = result.code;
+      document.getElementById('setup').style.display = 'none';
+      document.getElementById('room').style.display = 'block';
+      
+      client.on('peer:request', ({ peerId, name }) => {
+        const div = document.createElement('div');
+        div.className = 'peer pending';
+        div.id = `pending-${peerId}`;
+        div.innerHTML = `
+          <span>${name} (${peerId.slice(0,6)}...)</span>
+          <span>
+            <button onclick="approve('${peerId}')">✓ Approve</button>
+            <button onclick="deny('${peerId}')">✗ Deny</button>
+          </span>
+        `;
+        document.getElementById('pending').appendChild(div);
+      });
+      
+      client.on('peer:connected', ({ peerId }) => {
+        const pending = document.getElementById(`pending-${peerId}`);
+        if (pending) pending.remove();
+        
+        const div = document.createElement('div');
+        div.className = 'peer';
+        div.id = `peer-${peerId}`;
+        div.innerHTML = `<span>Peer ${peerId.slice(0,6)}...</span><span>🟢 Connected</span>`;
+        document.getElementById('peers').appendChild(div);
+      });
+      
+      client.on('peer:disconnected', ({ peerId }) => {
+        const el = document.getElementById(`peer-${peerId}`) || document.getElementById(`pending-${peerId}`);
+        if (el) el.remove();
+      });
+      
+      client.on('datachannel:message', ({ peerId, data }) => {
+        addMessage(`[${peerId.slice(0,6)}]: ${data}`);
+      });
+    }
+    
+    async function approve(peerId) {
+      await client.approvePeer(peerId, true);
+    }
+    
+    async function deny(peerId) {
+      await client.approvePeer(peerId, false);
+      document.getElementById(`pending-${peerId}`)?.remove();
+    }
+    
+    function broadcast() {
+      const input = document.getElementById('msgInput');
+      const msg = input.value.trim();
+      if (msg) {
+        client.broadcast(msg);
+        addMessage(`[you]: ${msg}`);
+        input.value = '';
+      }
+    }
+    
+    function addMessage(text) {
+      const div = document.createElement('div');
+      div.className = 'msg';
+      div.textContent = text;
+      document.getElementById('messages').appendChild(div);
+    }
+    
+    document.getElementById('msgInput').addEventListener('keypress', (e) => {
+      if (e.key === 'Enter') broadcast();
+    });
+  </script>
+</body>
+</html>
