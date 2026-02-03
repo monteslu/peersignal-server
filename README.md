@@ -49,17 +49,36 @@ httpServer.listen(3000);
 - Safe charset: `a-z` (no i,l,o) + `2-9` (no 0,1)
 - Case-insensitive
 
-## Client
+## DDoS Protection
 
-The server serves the client library at `/peersignal.js`.
+Built-in rate limiting and abuse prevention:
 
-Or install separately: [peersignal](https://github.com/monteslu/peersignal)
+| Protection | Default | Env Var |
+|------------|---------|---------|
+| Connections per IP | 20/min | - |
+| Room creation per IP | 5/min | - |
+| Join attempts per IP | 30/min | - |
+| Signals per socket | 50/sec | - |
+| Max pending peers/room | 10 | `MAX_PENDING_PER_ROOM` |
+| Max rooms per IP | 5 | `MAX_ROOMS_PER_IP` |
+| Idle timeout | 5 min | `IDLE_TIMEOUT_MS` |
+| Max payload size | 16KB | `MAX_PAYLOAD_SIZE` |
 
 ## Configuration
 
 | Env Var | Default | Description |
 |---------|---------|-------------|
 | `PORT` | 3000 | Server port |
+| `MAX_PENDING_PER_ROOM` | 10 | Max pending join requests per room |
+| `MAX_ROOMS_PER_IP` | 5 | Max rooms one IP can create |
+| `IDLE_TIMEOUT_MS` | 300000 | Disconnect idle sockets (5 min) |
+| `MAX_PAYLOAD_SIZE` | 16384 | Max signaling payload size (16KB) |
+
+## Client
+
+The server serves the client library at `/peersignal.js`.
+
+Or install separately: [peersignal](https://github.com/monteslu/peersignal)
 
 ## License
 
