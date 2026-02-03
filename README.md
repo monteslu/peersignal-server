@@ -39,11 +39,11 @@ httpServer.listen(3000);
 4. **WebRTC** P2P connection established (auto-approved by default)
 
 ```
-┌──────────┐                      ┌──────────┐
-│  Peer A  │◄── P2P DataChannel ──►│  Peer B  │
-└────┬─────┘                      └────┬─────┘
-     │                                  │
-     └───── Signaling via Server ───────┘
++----------+                        +----------+
+|  Peer A  |<-- P2P DataChannel --> |  Peer B  |
++----+-----+                        +-----+----+
+     |                                    |
+     +------ Signaling via Server --------+
 ```
 
 The server only helps establish the connection - all data flows directly between peers.
