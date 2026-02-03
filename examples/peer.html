@@ -1,0 +1,113 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>PeerSignal - Peer</title>
+  <style>
+    body { font-family: sans-serif; max-width: 600px; margin: 2rem auto; padding: 1rem; }
+    input[type="text"] { padding: 0.5rem; font-size: 1.2rem; width: 200px; }
+    button { padding: 0.5rem 1rem; margin: 0.25rem; cursor: pointer; }
+    #messages { background: #f5f5f5; padding: 1rem; height: 200px; overflow-y: auto; }
+    .msg { margin: 0.25rem 0; }
+    .status { padding: 0.5rem; margin: 1rem 0; }
+    .status.pending { background: #fff3e0; }
+    .status.connected { background: #e8f5e9; }
+    .status.denied { background: #ffebee; }
+  </style>
+</head>
+<body>
+  <h1>🔗 PeerSignal Peer</h1>
+  
+  <div id="setup">
+    <p>Enter the room code:</p>
+    <input type="text" id="codeInput" placeholder="xxx-xxx-xxx">
+    <input type="text" id="nameInput" placeholder="Your name">
+    <button onclick="joinRoom()">Join</button>
+  </div>
+  
+  <div id="room" style="display:none">
+    <div id="status" class="status pending">Waiting for host approval...</div>
+    
+    <h3>Messages</h3>
+    <div id="messages"></div>
+    <input type="text" id="msgInput" placeholder="Type a message..." disabled>
+    <button onclick="sendMsg()" disabled id="sendBtn">Send</button>
+  </div>
+
+  <script src="https://cdn.socket.io/4.7.4/socket.io.min.js"></script>
+  <script src="/peersignal-client.js"></script>
+  <script>
+    let client;
+    let hostId;
+    
+    async function joinRoom() {
+      const code = document.getElementById('codeInput').value.trim();
+      const name = document.getElementById('nameInput').value.trim() || 'Anonymous';
+      
+      if (!code) {
+        alert('Please enter a code');
+        return;
+      }
+      
+      client = PeerSignal.createClient(window.location.origin, { name });
+      await client.connect();
+      
+      const result = await client.joinRoom(code, name);
+      
+      if (result.error) {
+        alert(result.error);
+        return;
+      }
+      
+      document.getElementById('setup').style.display = 'none';
+      document.getElementById('room').style.display = 'block';
+      
+      client.on('peer:approved', ({ hostId: hid }) => {
+        hostId = hid;
+        document.getElementById('status').textContent = 'Approved! Connecting...';
+      });
+      
+      client.on('peer:denied', () => {
+        document.getElementById('status').textContent = 'Host denied your request.';
+        document.getElementById('status').className = 'status denied';
+      });
+      
+      client.on('peer:connected', () => {
+        document.getElementById('status').textContent = '🟢 Connected to host!';
+        document.getElementById('status').className = 'status connected';
+        document.getElementById('msgInput').disabled = false;
+        document.getElementById('sendBtn').disabled = false;
+      });
+      
+      client.on('host:disconnected', () => {
+        document.getElementById('status').textContent = '🔴 Host disconnected';
+        document.getElementById('status').className = 'status denied';
+      });
+      
+      client.on('datachannel:message', ({ data }) => {
+        addMessage(`[host]: ${data}`);
+      });
+    }
+    
+    function sendMsg() {
+      const input = document.getElementById('msgInput');
+      const msg = input.value.trim();
+      if (msg && hostId) {
+        client.send(hostId, msg);
+        addMessage(`[you]: ${msg}`);
+        input.value = '';
+      }
+    }
+    
+    function addMessage(text) {
+      const div = document.createElement('div');
+      div.className = 'msg';
+      div.textContent = text;
+      document.getElementById('messages').appendChild(div);
+    }
+    
+    document.getElementById('msgInput').addEventListener('keypress', (e) => {
+      if (e.key === 'Enter') sendMsg();
+    });
+  </script>
+</body>
+</html>
