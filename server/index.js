@@ -170,7 +170,7 @@ function createPeerSignalServer(httpServer, options = {}) {
       }
     };
 
-    const peer = rawr({ transport, methods, timeout: 10000 });
+    const _peer = rawr({ transport, methods, timeout: 10000 });
 
     socket.on('rpc', (msg) => {
       try {
@@ -233,7 +233,7 @@ const httpServer = createServer((req, res) => {
   }
 });
 
-const io = createPeerSignalServer(httpServer);
+const _io = createPeerSignalServer(httpServer);
 
 httpServer.listen(PORT, () => {
   console.log(`🔗 PeerSignal server running on http://localhost:${PORT}`);
